@@ -1,19 +1,45 @@
 name: zenith_care
-description: "A new Flutter project."
+description: "ZenithCare — Healthcare specialist booking platform."
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.7
+  sdk: '>=3.4.3 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
+  flutter_riverpod: ^3.1.0
+  freezed_annotation: ^3.1.0
+  riverpod_annotation: ^4.0.0
+  json_annotation: ^4.9.0
+  go_router: ^17.1.0
+  supabase_flutter: ^2.12.4
+  fpdart: ^1.2.0
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+  flutter_svg: ^2.0.9
+  intl: ^0.19.0
+  flutter_secure_storage: ^9.0.0
+  connectivity_plus: ^5.0.2
+  url_launcher: ^6.2.6
+  webview_flutter: ^4.7.0
+  shared_preferences: ^2.2.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: ^2.5.4
+  json_serializable: ^6.9.5
+  riverpod_generator: ^4.0.0+1
+  mockito: ^5.4.4
+  freezed: ^3.2.3
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images
+    - assets/icons
+    - assets/fonts
