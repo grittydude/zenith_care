@@ -7,7 +7,6 @@ sealed class AppFailure implements Exception {
   @override
   String toString() => '{$runtimeType: $message}';
 
-  
 }
 // Network Level Failures
 class NetworkFailure extends AppFailure {
@@ -63,4 +62,9 @@ class UserNotFoundFailure extends AuthenticationFailure {
 
 
 
+//dart run build_runner build --delete-conflicting-outputs
 
+//dart run build_runner watch --delete-conflicting-outputs
+
+//dart run build_runner clean
+//dart run build_runner build --delete-conflicting-outputs
