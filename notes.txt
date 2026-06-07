@@ -1,0 +1,16 @@
+redirect: (context, state) {
+  if(!isLoggedIn) {
+    return '/login'
+  }
+  return null;
+}
+
+context.go('/home');
+context.go('/profile');
+context.go('/appointments');
+context.go('/appoinments');
+
+//Auth & Nav
+/account
+
+state = AuthUnauthenticated();
