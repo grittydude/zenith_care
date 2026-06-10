@@ -76,7 +76,7 @@ GoRouter appRouter(Ref ref) {
         return AppRoutes.login;
       }
 
-      //Case 4: User is logged in but is on n auth screen or the splash
+      //Case 5: User is logged in but is on n auth screen or the splash
       if (isLoggedIn && (isOnAuthRoute || isOnSplash || isOnOnboarding)) {
         return AppRoutes.home;
       }

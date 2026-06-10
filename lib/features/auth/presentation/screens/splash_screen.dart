@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:zenith_care/core/constants/app_colors.dart';
 import 'package:zenith_care/core/constants/app_sizes.dart';
 import 'package:zenith_care/core/router/splash_onboarding_trigger.dart';
@@ -60,10 +59,7 @@ class SplashScreen extends ConsumerWidget {
                           ),
                         ),
                         onPressed: () {
-                          ref
-                              .read<StateController<bool>>(
-                                  splashOnboardingTriggerProvider.notifier)
-                              .state = true;
+                          ref.read(splashOnboardingTriggerProvider.notifier).state = true;
                         },
                         child: Text(
                           'Get Started',
