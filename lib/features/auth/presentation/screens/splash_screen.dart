@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:zenith_care/core/constants/app_colors.dart';
 import 'package:zenith_care/core/constants/app_sizes.dart';
+import 'package:zenith_care/core/router/navigation_stream.dart';
+import 'package:zenith_care/core/router/proceed_to_onboarding.dart';
 import 'package:zenith_care/core/widgets/app_logo.dart';
 import 'package:zenith_care/features/auth/presentation/notifiers/auth_notifier.dart';
+import 'package:zenith_care/features/auth/presentation/screens/onboarding_screen.dart';
 
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
@@ -12,13 +14,6 @@ class SplashScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
-
-    // Navigate returning users to home
-    ref.listen(authProvider, (previous, next) {
-      if (next is AuthAuthenticated) {
-        context.go('/home');
-      }
-    });
 
     return Scaffold(
       body: Container(
@@ -66,7 +61,10 @@ class SplashScreen extends ConsumerWidget {
                           ),
                         ),
                         onPressed: () {
-                          context.go('/onboarding');
+                          ref
+                              .read(proceedToOnboardingProvider.notifier)
+                              .proceed();
+                          ref.read(navigationStreamProvider).notify();
                         },
                         child: Text(
                           'Get Started',

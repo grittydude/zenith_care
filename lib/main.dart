@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zenith_care/core/constants/app_theme.dart';
-
-import 'features/auth/presentation/screens/splash_screen.dart';
+import 'package:zenith_care/core/router/app_router.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
@@ -17,21 +16,23 @@ Future<void> main() async {
 
   runApp(
     const ProviderScope(
-      child: MaterialApp(home: ZenithCareApp()),
+      child: ZenithCareApp(),
     ),
   );
 }
 
-class ZenithCareApp extends StatelessWidget {
+class ZenithCareApp extends ConsumerWidget {
   const ZenithCareApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+
+    return MaterialApp.router(
       title: 'ZenithCare',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+      routerConfig: router,
     );
   }
 }

@@ -1,6 +1,7 @@
 // ignore_for_file: inference_failure_on_instance_creation
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zenith_care/core/errors/failures.dart';
 import 'package:zenith_care/features/auth/domain/entities/app_user.dart';
 
@@ -46,8 +47,22 @@ abstract final class AuthErrorFields {
 class AuthNotifier extends _$AuthNotifier {
   @override
   AuthState build() {
-    Future.microtask(() {
-      if (state is AuthInitial) {
+    Future.microtask(() async {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        final metadata = user.userMetadata ?? <String, dynamic>{};
+
+        state = AuthAuthenticated(
+          AppUser(
+            id: user.id,
+            email: user.email ?? '',
+            fullName: metadata['full_name']?.toString(),
+            phone: user.phone,
+            avatarUrl: metadata['avatar_url']?.toString(),
+            isEmailVerified: user.emailConfirmedAt != null,
+          ),
+        );
+      } else {
         state = const AuthUnauthenticated();
       }
     });

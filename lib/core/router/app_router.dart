@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:zenith_care/core/router/app_routes.dart';
+import 'package:zenith_care/core/router/go_router_refresh_stream.dart';
+import 'package:zenith_care/core/router/navigation_stream.dart';
+import 'package:zenith_care/core/router/proceed_to_onboarding.dart';
 import 'package:zenith_care/features/auth/presentation/screens/otp_verify_screen.dart';
 import 'package:zenith_care/features/specialists/domain/entities/specialist.dart';
 import '../../features/appointments/domain/entities/appointment.dart';
@@ -33,9 +36,12 @@ part 'app_router.g.dart';
 @riverpod
 GoRouter appRouter(Ref ref) {
   final authState = ref.watch(authProvider);
+  final navigationStreamNotifier = ref.watch(navigationStreamProvider);
+  final shouldProceedToOnboarding = ref.watch(proceedToOnboardingProvider);
 
   return GoRouter(
-    initialLocation: AppRoutes.splash,    
+    initialLocation: AppRoutes.splash,
+    refreshListenable: GoRouterRefreshStream(navigationStreamNotifier.stream),
     redirect: (BuildContext context, GoRouterState state) {
       final isLoggedIn = authState is AuthAuthenticated;
       final isInitializing = authState is AuthInitial;
@@ -51,12 +57,17 @@ GoRouter appRouter(Ref ref) {
         return AppRoutes.splash;
       }
 
-      //Case 2: user is not logged in and trying to reach a protect screen
+      //Case 2: User on splash and pressed the button → go to onboarding
+      if (!isLoggedIn && isOnSplash && shouldProceedToOnboarding) {
+        return AppRoutes.onboarding;
+      }
+
+      //Case 3: user is not logged in and trying to reach a protect screen
       if (!isLoggedIn && !isOnAuthRoute && !isOnSplash && !isOnOnboarding) {
         return AppRoutes.login;
       }
 
-      //Case 3: User is logged in but is on n auth screen or the splash
+      //Case 4: User is logged in but is on n auth screen or the splash
       if (isLoggedIn && (isOnAuthRoute || isOnSplash || isOnOnboarding)) {
         return AppRoutes.home;
       }
