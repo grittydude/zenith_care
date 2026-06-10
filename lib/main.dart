@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:zenith_care/core/constants/app_sizes.dart';
 import 'package:zenith_care/core/constants/app_theme.dart';
+
+import 'features/auth/presentation/screens/splash_screen.dart';
 
 const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const _supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
@@ -16,7 +17,7 @@ Future<void> main() async {
 
   runApp(
     const ProviderScope(
-      child: ZenithCareApp(),
+      child: MaterialApp(home: ZenithCareApp()),
     ),
   );
 }
@@ -30,23 +31,7 @@ class ZenithCareApp extends StatelessWidget {
       title: 'ZenithCare',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            children: [
-              Text(
-                'ZenithCare',
-                style: Theme.of(context).textTheme.displayMedium,
-              ),
-              const SizedBox(height: AppSizes.spaceLG),
-              ElevatedButton(
-                onPressed: () {},
-                child: const Text('Get Started'),
-              ),
-            ],
-          ),
-        ),
-      ),
+      home: const SplashScreen(),
     );
   }
 }

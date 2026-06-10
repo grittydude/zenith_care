@@ -1,11 +1,96 @@
 import 'package:flutter/material.dart';
-import 'package:zenith_care/core/widgets/placeholder_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zenith_care/core/constants/app_colors.dart';
+import 'package:zenith_care/core/constants/app_sizes.dart';
+import 'package:zenith_care/core/widgets/app_logo.dart';
+import 'package:zenith_care/features/auth/presentation/notifiers/auth_notifier.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const PlaceholderScreen(title: 'Splash Screen');
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+
+    // Navigate returning users to home
+    ref.listen(authProvider, (previous, next) {
+      if (next is AuthAuthenticated) {
+        context.go('/home');
+      }
+    });
+
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primary, AppColors.primaryDark],
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const ZenithCareLogo(),
+            const SizedBox(height: AppSizes.space5XL),
+            if (authState is AuthInitial)
+              const SizedBox(
+                width: AppSizes.space4XL,
+                height: AppSizes.space4XL,
+                child: CircularProgressIndicator(
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppColors.textOnPrimary),
+                  strokeWidth: 3,
+                ),
+              )
+            else if (authState is AuthUnauthenticated)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSizes.spaceXL),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      height: AppSizes.buttonHeightLarge,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.textOnPrimary,
+                          foregroundColor: AppColors.primary,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusSM),
+                          ),
+                        ),
+                        onPressed: () {
+                          context.go('/onboarding');
+                        },
+                        child: Text(
+                          'Get Started',
+                          style:
+                              Theme.of(context).textTheme.titleLarge!.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.spaceLG),
+                    Text(
+                      'Trusted care, just a tap away',
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: AppColors.textOnPrimary.withAlpha(156),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }
