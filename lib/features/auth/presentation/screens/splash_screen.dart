@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:zenith_care/core/constants/app_colors.dart';
 import 'package:zenith_care/core/constants/app_sizes.dart';
-import 'package:zenith_care/core/router/navigation_stream.dart';
-import 'package:zenith_care/core/router/proceed_to_onboarding.dart';
+import 'package:zenith_care/core/router/splash_onboarding_trigger.dart';
 import 'package:zenith_care/core/widgets/app_logo.dart';
 import 'package:zenith_care/features/auth/presentation/notifiers/auth_notifier.dart';
 
@@ -61,9 +61,9 @@ class SplashScreen extends ConsumerWidget {
                         ),
                         onPressed: () {
                           ref
-                              .read(proceedToOnboardingProvider.notifier)
-                              .proceed();
-                          ref.read(navigationStreamProvider).notify();
+                              .read<StateController<bool>>(
+                                  splashOnboardingTriggerProvider.notifier)
+                              .state = true;
                         },
                         child: Text(
                           'Get Started',
