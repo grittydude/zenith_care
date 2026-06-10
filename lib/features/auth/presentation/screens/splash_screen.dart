@@ -6,7 +6,6 @@ import 'package:zenith_care/core/router/navigation_stream.dart';
 import 'package:zenith_care/core/router/proceed_to_onboarding.dart';
 import 'package:zenith_care/core/widgets/app_logo.dart';
 import 'package:zenith_care/features/auth/presentation/notifiers/auth_notifier.dart';
-import 'package:zenith_care/features/auth/presentation/screens/onboarding_screen.dart';
 
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
