@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zenith_care/core/constants/app_colors.dart';
 import 'package:zenith_care/core/constants/app_sizes.dart';
+import 'package:zenith_care/features/auth/data/datasources/onboarding_slides.dart';
 import 'package:zenith_care/features/auth/presentation/notifiers/onboarding_notifier.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -13,25 +14,6 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   late final PageController _pageController;
-
-  static const _slides = [
-    _OnboardingSlide(
-      title: 'Expert Specialists',
-      description: 'Connect with verified doctors across multiple specialties',
-      icon: Icons.medical_services_outlined,
-    ),
-    _OnboardingSlide(
-      title: 'Consult from Anywhere',
-      description: 'Book appointments and consult securely at any time',
-      icon: Icons.videocam_outlined,
-    ),
-    _OnboardingSlide(
-      title: 'Your Health, Our Priority',
-      description:
-          'Personalised care and continuous support for a healthier you',
-      icon: Icons.favorite_outline,
-    ),
-  ];
 
   @override
   void initState() {
@@ -59,7 +41,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
     });
 
-    final isLastPage = currentPage == _slides.length - 1;
+    final isLastPage = currentPage == slides.length - 1;
 
     return Scaffold(
       backgroundColor: AppColors.textOnPrimary,
@@ -77,8 +59,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 250),
                       opacity: isLastPage ? 0 : 1,
-                      child: TextButton(
-                        onPressed: isLastPage
+                      child: GestureDetector(
+                        onTap: isLastPage
                             ? null
                             : () =>
                                 ref.read(onboardingProvider.notifier).skip(),
@@ -99,9 +81,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 child: PageView.builder(
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _slides.length,
+                  itemCount: slides.length,
                   itemBuilder: (context, index) {
-                    final slide = _slides[index];
+                    final slide = slides[index];
                     return Column(
                       children: [
                         Expanded(
@@ -168,7 +150,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  _slides.length,
+                  slides.length,
                   (index) {
                     final isActive = index == currentPage;
                     return AnimatedContainer(
@@ -191,20 +173,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: TextButton(
-                      onPressed: isLastPage
+                    flex: 1,
+                    child: GestureDetector(
+                      onTap: isLastPage
                           ? null
                           : () => ref.read(onboardingProvider.notifier).skip(),
-                      child: Text(
-                        'Skip',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
+                      child: Text('Skip',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                          textAlign: TextAlign.center),
                     ),
                   ),
                   Expanded(
+                    flex: 1,
                     child: SizedBox(
                       height: AppSizes.buttonHeightLarge,
                       child: ElevatedButton(
@@ -218,7 +202,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         ),
                         onPressed: () => ref
                             .read(onboardingProvider.notifier)
-                            .nextPage(totalPages: _slides.length),
+                            .nextPage(totalPages: slides.length),
                         child: Text(
                           isLastPage ? 'Get Started' : 'Next',
                           style:
@@ -239,16 +223,4 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
     );
   }
-}
-
-class _OnboardingSlide {
-  const _OnboardingSlide({
-    required this.title,
-    required this.description,
-    required this.icon,
-  });
-
-  final String title;
-  final String description;
-  final IconData icon;
 }
