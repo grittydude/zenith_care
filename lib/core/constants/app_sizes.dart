@@ -27,7 +27,7 @@ abstract final class AppSizes {
 
   //--- Domponent dimensions
   static const double buttonHeightLarge  = 52.0;
-  static const double buttonHeightMedium = 44.0;
+  static const double buttonHeightMedium = 48.0;
   static const double buttonHeightSmall  = 36.0;
 
   static const double inputHeight     = 52.0;
