@@ -4,6 +4,7 @@ abstract final class AppColors {
   //--- Brand Colors
   static const Color primary = Color(0xFFE53935);
   static const Color primaryDark = Color(0xFFC62828);
+  static const Color primaryDarker = Color.fromARGB(255, 156, 12, 12);
   static const Color primaryLight = Color(0xFFFF6659);
   static const Color primarySurface = Color(0xFFFFF5F5);
 
