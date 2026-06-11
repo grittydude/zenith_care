@@ -28,6 +28,8 @@ class OnboardingNotifier extends _$OnboardingNotifier {
     }
   }
 
+  void jumpToPage(int index) => state = index;
+
   Future<void> _markComplete() async {
     final prefs = await ref.watch(sharedPreferenceProvider.future);
     await prefs.setBool(_kOnboardingCompleteKey, true);
