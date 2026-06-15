@@ -30,11 +30,6 @@ class AppScaffold extends StatelessWidget {
               label: 'Appointments',
             ),
             NavigationDestination(
-              icon: Icon(Icons.message_outlined),
-              selectedIcon: Icon(Icons.message),
-              label: 'Messages',
-            ),
-            NavigationDestination(
               icon: Icon(Icons.person_outlined),
               selectedIcon: Icon(Icons.person),
               label: 'Profile',

@@ -6,14 +6,13 @@ abstract class AppRoutes {
 
   // ----- Authentication -----
   static const String login = '/auth/login';
-  static const String register = 'auth//register';
+  static const String register = '/auth/register';
   static const String forgotPassword = '/auth/forgot-password';
   static const String verifyOtp = '/auth/verify-otp';
 
   // ----- Main Shell (Bottom Nav tabs) -----
   static const String home = '/home';
   static const String appointments = '/appointments';
-  static const String messages = '/messages';
   static const String profile = '/profile';
 
   //Specialist

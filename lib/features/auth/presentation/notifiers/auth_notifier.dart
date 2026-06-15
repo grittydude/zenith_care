@@ -68,6 +68,21 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
+  // Temporary UI-only method — removes when real Supabase auth is wired up
+  Future<void> signInWithFakeUser() async {
+    state = const AuthLoading();
+    await Future.delayed(const Duration(seconds: 2));
+    state = const AuthAuthenticated(
+      AppUser(
+        id: 'fake-user-001',
+        email: 'ikeys@zenithcare.com',
+        fullName: 'Ikeys',
+      ),
+    );
+    // GoRouter redirect detects AuthAuthenticated and navigates to /home
+    // automatically. No context.go() needed here.
+  }
+
   Future<void> register(String email, String password, String fullName) async {
     state = const AuthLoading();
     try {

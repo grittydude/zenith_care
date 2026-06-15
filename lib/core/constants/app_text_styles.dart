@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:zenith_care/core/constants/app_colors.dart';
 
 abstract final class AppTextStyles {
-
   static const TextStyle displayLarge = TextStyle(
     fontSize: 36,
     fontWeight: FontWeight.w700,
@@ -19,7 +18,7 @@ abstract final class AppTextStyles {
     letterSpacing: -0.3,
   );
 
- static const TextStyle headlineLarge = TextStyle(
+  static const TextStyle headlineLarge = TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
@@ -40,7 +39,7 @@ abstract final class AppTextStyles {
     height: 1.35,
   );
 
- static const TextStyle titleLarge = TextStyle(
+  static const TextStyle titleLarge = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
@@ -61,7 +60,7 @@ abstract final class AppTextStyles {
     height: 1.4,
   );
 
- static const TextStyle bodyLarge = TextStyle(
+  static const TextStyle bodyLarge = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w400,
     color: AppColors.textPrimary,
@@ -82,8 +81,7 @@ abstract final class AppTextStyles {
     height: 1.5,
   );
 
-
-static const TextStyle labelLarge = TextStyle(
+  static const TextStyle labelLarge = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.textOnPrimary,
@@ -105,9 +103,15 @@ static const TextStyle labelLarge = TextStyle(
     height: 1.2,
     letterSpacing: 0.2,
   );
+  static const TextStyle labelSmall10 = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w500,
+    color: AppColors.textSecondary,
+    height: 1.2,
+    letterSpacing: 0.2,
+  );
 
-
- static const TextStyle caption = TextStyle(
+  static const TextStyle caption = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w400,
     color: AppColors.textSecondary,
