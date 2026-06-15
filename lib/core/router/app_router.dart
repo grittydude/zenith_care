@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:zenith_care/core/router/app_routes.dart';
-import 'package:zenith_care/features/auth/presentation/screens/otp_verify_screen.dart';
-import 'package:zenith_care/features/specialists/domain/entities/specialist.dart';
 import '../../features/appointments/domain/entities/appointment.dart';
 import '../../features/appointments/presentation/screens/appointment_detail_screen.dart';
 import '../../features/appointments/presentation/screens/appointment_screen.dart';
 import '../../features/auth/presentation/notifiers/auth_notifier.dart';
+import '../../features/auth/presentation/notifiers/onboarding_notifier.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
+import '../../features/auth/presentation/screens/otp_verify_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/booking/domain/entities/booking_draft.dart';
@@ -19,50 +18,94 @@ import '../../features/booking/presentation/screens/booking_slot_screen.dart';
 import '../../features/booking/presentation/screens/booking_success_screen.dart';
 import '../../features/booking/presentation/screens/payment_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/messages/messages_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/help_support_screen.dart';
 import '../../features/profile/presentation/screens/notification_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/specialists/domain/entities/specialist.dart';
 import '../../features/specialists/presentation/screens/specialist_detail_screen.dart';
 import '../../features/specialists/presentation/screens/specialist_list_screend.dart';
 import '../widgets/app_scaffold.dart';
+import 'app_routes.dart';
+
 
 part 'app_router.g.dart';
 
-@riverpod
+// ── RouterNotifier ─────────────────────────────────────────────────────────
+// A ChangeNotifier that bridges Riverpod providers to GoRouter.
+// GoRouter calls notifyListeners() whenever this fires, which causes
+// it to re-evaluate the redirect callback.
+// This replaces GoRouterRefreshStream entirely.
+
+class _RouterNotifier extends ChangeNotifier {
+  _RouterNotifier(this._ref) {
+    // Listen to auth state changes
+    _ref.listen<AuthState>(authProvider, (_, __) => notifyListeners());
+
+    // Listen to onboarding completion
+    _ref.listen<AsyncValue<bool>>(
+      hasCompletedOnboardingProvider,
+      (_, __) => notifyListeners(),
+    );
+  }
+
+  final Ref _ref;
+}
+
+@Riverpod(keepAlive: true)
 GoRouter appRouter(Ref ref) {
-  final authState = ref.watch(authProvider);
+  // Create the notifier that bridges Riverpod → GoRouter
+  final notifier = _RouterNotifier(ref);
 
   return GoRouter(
-    initialLocation: AppRoutes.splash,    
-    redirect: (BuildContext context, GoRouterState state) {
+    initialLocation: AppRoutes.splash,
+    debugLogDiagnostics: true,
+
+    // This fires whenever auth state OR onboarding state changes.
+    // GoRouter then re-runs the redirect callback below.
+    refreshListenable: notifier,
+
+    redirect: (context, state) {
+      // Read current values at redirect evaluation time
+      final authState = ref.read(authProvider);
+      final onboardingAsync = ref.read(hasCompletedOnboardingProvider);
+
       final isLoggedIn = authState is AuthAuthenticated;
       final isInitializing = authState is AuthInitial;
+      final seenOnboarding = onboardingAsync.when(
+        data: (value) => value,
+        loading: () => false,
+        error: (_, __) => false,
+      );
 
-      // Destinations
-      final destination = state.matchedLocation;
-      final isOnAuthRoute = destination.startsWith('/auth');
-      final isOnSplash = destination == '/';
-      final isOnOnboarding = destination == AppRoutes.onboarding;
+      final loc = state.matchedLocation;
+      final isOnSplash = loc == AppRoutes.splash;
+      final isOnOnboarding = loc == AppRoutes.onboarding;
+      final isOnAuthRoute = loc.startsWith('/auth');
 
-      //Case 1: App is initializing, show splash screen
-      if (isInitializing) {
-        return AppRoutes.splash;
+      debugPrint(
+          '🔁 Redirect called — seenOnboarding: $seenOnboarding, loc: $loc, isLoggedIn: $isLoggedIn');
+
+      // Authenticated users never see splash or auth screens
+      if (isLoggedIn && isOnSplash) return AppRoutes.home;
+      if (isLoggedIn && isOnAuthRoute) return AppRoutes.home;
+
+      // Still checking session — hold on splash
+      if (isInitializing) return AppRoutes.splash;
+
+      // On onboarding — leave them if not seen it, send to login if done
+      if (isOnOnboarding) {
+        return seenOnboarding ? AppRoutes.login : null;
       }
 
-      //Case 2: user is not logged in and trying to reach a protect screen
-      if (!isLoggedIn && !isOnAuthRoute && !isOnSplash && !isOnOnboarding) {
-        return AppRoutes.login;
+      // Logged out on a protected screen — gate them
+      if (!isLoggedIn && !isOnSplash && !isOnOnboarding && !isOnAuthRoute) {
+        return seenOnboarding ? AppRoutes.login : AppRoutes.onboarding;
       }
 
-      //Case 3: User is logged in but is on n auth screen or the splash
-      if (isLoggedIn && (isOnAuthRoute || isOnSplash || isOnOnboarding)) {
-        return AppRoutes.home;
-      }
-
-      return null; // no redirection
+      return null;
     },
+
     routes: [
       // ── Splash ──────────────────────────────────────────────────────────
       GoRoute(
@@ -190,16 +233,6 @@ GoRouter appRouter(Ref ref) {
             ],
           ),
 
-          // -- Branch 3: Messages
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.messages,
-                builder: (context, state) => const MessagesScreen(),
-              )
-            ],
-          ),
-
           // -- Branch 4: Profile
           StatefulShellBranch(
             routes: [
@@ -232,30 +265,7 @@ GoRouter appRouter(Ref ref) {
           return BookingSuccessScreen(appointment: appointment);
         },
       )
-    ],
 
-    //-- Error page
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Column(
-          children: [
-            Text(
-              'Page not found!',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              state.error?.message ?? 'Unknown error',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => context.go(AppRoutes.home),
-              child: const Text('Go home'),
-            )
-          ],
-        ),
-      ),
-    ),
+    ],
   );
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,9 +34,10 @@ class OnboardingNotifier extends _$OnboardingNotifier {
   Future<void> _markComplete() async {
     final prefs = await ref.watch(sharedPreferenceProvider.future);
     await prefs.setBool(_kOnboardingCompleteKey, true);
-
+    debugPrint('✅ Onboarding complete written to SharedPreferences');
     ref.invalidate(hasCompletedOnboardingProvider);
+    debugPrint('✅ hasCompletedOnboardingProvider invalidated');
   }
 
-  Future<void> skip() async =>  _markComplete();
+  Future<void> skip() async => _markComplete();
 }
