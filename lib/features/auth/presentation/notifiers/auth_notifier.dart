@@ -8,6 +8,7 @@ import 'package:zenith_care/features/auth/data/providers/auth_providers.dart';
 import 'package:zenith_care/features/auth/domain/entities/app_user.dart';
 
 import '../../../../core/constants/auth_error_fields.dart';
+import '../../domain/repositories/i_auth_repository.dart';
 
 part 'auth_notifier.g.dart';
 
@@ -28,6 +29,7 @@ class AuthAuthenticated extends AuthState {
 
   final AppUser user;
 }
+
 class AuthSignupSuccess extends AuthState {
   const AuthSignupSuccess();
 }
@@ -45,12 +47,16 @@ class AuthUnauthenticated extends AuthState {
 @Riverpod(keepAlive: true)
 class AuthNotifier extends _$AuthNotifier {
   StreamSubscription<AppUser?>? _authSubscription;
-  final bool _isCleanSignOut = false;
+  bool _isCleanSignOut = false;
+  late IAuthRepository _repository;
+
   @override
   AuthState build() {
     _listenToAuthStream();
 
     ref.onDispose(() => _authSubscription?.cancel());
+
+    _repository = ref.read(authResporitoryProvider);
 
     return const AuthInitial();
   }
@@ -143,7 +149,15 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
-  Future<void> logout() async {
-    state = const AuthUnauthenticated();
+  Future<void> signOut() async {
+    _isCleanSignOut = true;
+    try {
+      await _repository.signOut();
+      state = const AuthUnauthenticated();
+    } on AppFailure catch (e) {
+      state = AuthUnauthenticated(errorMessage: e.message);
+    } finally {
+      _isCleanSignOut = false;
+    }
   }
 }

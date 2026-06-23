@@ -14,4 +14,6 @@ abstract interface class IAuthRepository {
   Future<AppUser?> get getCurrentUser;
 
   Stream<AppUser?> get authStateChanges;
+
+  Future<void> signOut();
 }

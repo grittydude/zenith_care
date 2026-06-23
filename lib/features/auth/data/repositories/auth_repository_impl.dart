@@ -24,4 +24,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       fullName: fullName,
     );
   }
+
+  @override
+  Future<void> signOut() => _datasource.signOut();
 }

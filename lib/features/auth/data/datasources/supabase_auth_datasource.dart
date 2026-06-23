@@ -35,13 +35,22 @@ class SupabaseAuthDatasource {
       debugPrint('Supabase Auth Error');
       debugPrint('message ${e.message}');
       debugPrint('Status code ${e.statusCode}');
-      
 
       throw _mapAuthException(e);
     } on SocketException {
       throw const NetworkFailure();
     } on TimeoutException {
       throw const TimeoutFailure();
+    }
+  }
+
+  //Signout
+
+  Future<void> signOut() async {
+    try {
+      await _client.auth.signOut();
+    } on AuthException catch (e) {
+      throw _mapAuthException(e);
     }
   }
 
@@ -96,8 +105,8 @@ class SupabaseAuthDatasource {
     }
 
     if (e.statusCode == '429') {
-        return const ServerFailure('Please wait a few minutes and try again');
-      }
+      return const ServerFailure('Please wait a few minutes and try again');
+    }
 
     //unknown error
     return UnknownAuthFailure(
