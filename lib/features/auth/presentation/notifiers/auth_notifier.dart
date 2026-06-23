@@ -1,8 +1,13 @@
 // ignore_for_file: inference_failure_on_instance_creation
 
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:zenith_care/core/errors/failures.dart';
+import 'package:zenith_care/features/auth/data/providers/auth_providers.dart';
 import 'package:zenith_care/features/auth/domain/entities/app_user.dart';
+
+import '../../../../core/constants/auth_error_fields.dart';
 
 part 'auth_notifier.g.dart';
 
@@ -23,6 +28,9 @@ class AuthAuthenticated extends AuthState {
 
   final AppUser user;
 }
+class AuthSignupSuccess extends AuthState {
+  const AuthSignupSuccess();
+}
 
 class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated({
@@ -34,24 +42,36 @@ class AuthUnauthenticated extends AuthState {
   final String? errorField;
 }
 
-abstract final class AuthErrorFields {
-  static const String email = 'email';
-  static const String password = 'password';
-  static const String fullname = 'fullname';
-  static const String confirmPassword = 'confirmPassword';
-  static const String genral = 'general';
-}
-
-@riverpod
+@Riverpod(keepAlive: true)
 class AuthNotifier extends _$AuthNotifier {
+  StreamSubscription<AppUser?>? _authSubscription;
+  final bool _isCleanSignOut = false;
   @override
   AuthState build() {
-    Future.microtask(() {
-      if (state is AuthInitial) {
-        state = const AuthUnauthenticated();
-      }
-    });
+    _listenToAuthStream();
+
+    ref.onDispose(() => _authSubscription?.cancel());
+
     return const AuthInitial();
+  }
+
+  void _listenToAuthStream() {
+    final repository = ref.read(authResporitoryProvider);
+    _authSubscription = repository.authStateChanges.listen(
+      (user) {
+        if (user != null) {
+          state = AuthAuthenticated(user);
+        } else {
+          if (state is! AuthUnauthenticated || _isCleanSignOut) {
+            state = const AuthUnauthenticated();
+          }
+        }
+      },
+      onError: (Object error) {
+        state = const AuthUnauthenticated(
+            errorMessage: 'Session error. Please sign in again');
+      },
+    );
   }
 
   Future<void> login(String email, String password) async {
@@ -60,7 +80,7 @@ class AuthNotifier extends _$AuthNotifier {
       await Future.delayed(const Duration(seconds: 1));
       state = const AuthUnauthenticated(
           errorMessage: 'Supabase isnot wired up yet',
-          errorField: AuthErrorFields.genral);
+          errorField: AuthErrorFields.general);
     } on AuthenticationFailure catch (e) {
       state = AuthUnauthenticated(
         errorMessage: e.message,
@@ -83,13 +103,39 @@ class AuthNotifier extends _$AuthNotifier {
     // automatically. No context.go() needed here.
   }
 
-  Future<void> register(String email, String password, String fullName) async {
+  // ---------------------Signup -------------------
+
+  Future<void> signUp(
+    String fullName,
+    String email,
+    String password,
+    String confirmPassword,
+  ) async {
     state = const AuthLoading();
     try {
-      await Future.delayed(const Duration(seconds: 1));
-      state = const AuthUnauthenticated(
-          errorMessage: 'Supabase isnot wired up yet',
-          errorField: AuthErrorFields.genral);
+      final usecase = ref.read(signUpUseCaseProvider);
+      await usecase.execute(
+        fullName: fullName,
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword,
+      );
+      state = const AuthSignupSuccess();
+    } on ValidationFailure catch (e) {
+      //Field-specific validation error
+      state = AuthUnauthenticated(
+        errorMessage: e.message,
+        errorField: e.field,
+      );
+    } on EmailAlreadyInUseFailure catch (e) {
+      state = AuthUnauthenticated(
+        errorMessage: e.message,
+        errorField: AuthErrorFields.email,
+      );
+    } on NetworkFailure catch (e) {
+      state = AuthUnauthenticated(
+        errorMessage: e.message,
+      );
     } on AuthenticationFailure catch (e) {
       state = AuthUnauthenticated(
         errorMessage: e.message,

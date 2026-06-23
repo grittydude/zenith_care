@@ -4,7 +4,8 @@ import 'package:zenith_care/core/constants/app_sizes.dart';
 import 'package:zenith_care/core/constants/app_text_styles.dart';
 
 class ZcLabeledField extends StatelessWidget {
-  const ZcLabeledField({super.key, 
+  const ZcLabeledField({
+    super.key,
     required this.label,
     required this.hint,
     required this.controller,
@@ -14,10 +15,13 @@ class ZcLabeledField extends StatelessWidget {
     this.autocorrect = true,
     this.textCapitalization = TextCapitalization.none,
     this.suffixIcon,
+    this.errorText,
+    this.onChanged
   });
 
   final String label;
   final String hint;
+  final String? errorText;
   final TextEditingController controller;
   final bool obscureText;
   final TextInputType? keyboardType;
@@ -25,6 +29,7 @@ class ZcLabeledField extends StatelessWidget {
   final bool autocorrect;
   final TextCapitalization textCapitalization;
   final Widget? suffixIcon;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +56,7 @@ class ZcLabeledField extends StatelessWidget {
           textInputAction: textInputAction,
           autocorrect: autocorrect,
           textCapitalization: textCapitalization,
+          onChanged: onChanged,
           style: AppTextStyles.bodyLarge.copyWith(
             color: AppColors.textPrimary,
           ),
@@ -60,6 +66,7 @@ class ZcLabeledField extends StatelessWidget {
               color: AppColors.textHint,
             ),
             suffixIcon: suffixIcon,
+            errorText: errorText
           ),
         ),
       ],

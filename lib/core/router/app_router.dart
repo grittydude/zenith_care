@@ -129,8 +129,7 @@ GoRouter appRouter(Ref ref) {
         // extra is for passing complex objects that cannot be encoded in the URL.
         // The register screen needs to know the email pre-filled from the login screen.
         builder: (context, state) {
-          final prefillEmail = state.extra as String? ?? '';
-          return RegisterScreen(prefillMail: prefillEmail);
+          return const RegisterScreen();
         },
       ),
       GoRoute(

@@ -2,25 +2,26 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zenith_care/core/constants/auth_error_fields.dart';
 import 'package:zenith_care/core/widgets/loading_dialog.dart';
 import 'package:zenith_care/core/widgets/success_dialog.dart';
+import 'package:zenith_care/features/auth/presentation/notifiers/auth_notifier.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/widgets/labeled_text_field.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key, required this.prefillMail});
-
-  final String prefillMail;
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _fullNameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
@@ -29,6 +30,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
+
+  String? _fullNameError;
+  String? _emailError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+
+  bool _isDialogShowing = false;
 
   @override
   void dispose() {
@@ -39,27 +47,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _handleSignUp() async {
-    _showLoadingDialog();
-    await Future.delayed(const Duration(seconds: 2));
+  // --- Handler
+  void _clearErrors() {
+    setState(() {
+      _fullNameError = null;
+      _emailError = null;
+      _passwordError = null;
+      _confirmPasswordError = null;
+    });
+  }
 
-    if (mounted) {
-      Navigator.of(context).pop();
-      _showSuccessDialog();
+  Future<void> _handleSignUp() async {
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Please agree to the Terms of Servcie to continue'),
+        behavior: SnackBarBehavior.floating,
+      ));
+      return;
     }
+    _clearErrors();
+
+    //Call notifier
+    ref.read(authProvider.notifier).signUp(_fullNameCtrl.text, _emailCtrl.text,
+        _passwordCtrl.text, _confirmPasswordCtrl.text);
   }
 
   void _showLoadingDialog() {
+    if (_isDialogShowing) return;
+    _isDialogShowing = true;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (context) => const ZcLoadingDialog(
         message: 'Setting up your account',
       ),
-    );
+    ).then((_) => _isDialogShowing = false);
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(VoidCallback onButtonTap) {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -67,16 +92,77 @@ class _RegisterScreenState extends State<RegisterScreen> {
         title: 'Awesome',
         description: const Text('You have successfully signed up.'),
         buttonLabel: 'Next',
-        onButtonTap: () {
-          Navigator.of(dialogContext).pop();
-          context.go(AppRoutes.login);
-        },
+        onButtonTap: () => Navigator.of(dialogContext).pop(),
       ),
-    );
+    ).then((_) {
+      if (mounted) onButtonTap();
+    });
+  }
+
+  void _dismissDialog() {
+    if (_isDialogShowing && mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+  }
+
+  //field error routing
+  void _handleFieldError(AuthUnauthenticated state) {
+    switch (state.errorField) {
+      case AuthErrorFields.fullName:
+        setState(() => _fullNameError = state.errorMessage);
+      case AuthErrorFields.email:
+        setState(() => _emailError = state.errorMessage);
+      case AuthErrorFields.password:
+        setState(() => _passwordError = state.errorMessage);
+      case AuthErrorFields.confirmPassword:
+        setState(() => _confirmPasswordError = state.errorMessage);
+      default:
+        if (state.errorMessage != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(state.errorMessage!),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ));
+        }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      switch (next) {
+        case AuthLoading():
+          _showLoadingDialog();
+          break;
+
+        case AuthSignupSuccess():
+          _dismissDialog();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _showSuccessDialog(() {
+                debugPrint('success button clicked');
+                debugPrint('Going to: ${AppRoutes.login}');
+
+                if (!mounted) return;
+                context.go(AppRoutes.login);
+              });
+            }
+          });
+          break;
+
+        case AuthAuthenticated():
+          _dismissDialog();
+          break;
+
+        case AuthUnauthenticated():
+          _dismissDialog();
+          _handleFieldError(next);
+          break;
+
+        case AuthInitial():
+          break;
+      }
+    });
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
@@ -125,6 +211,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.name,
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
+                errorText: _fullNameError,
+                onChanged: (value) {
+                  if (_fullNameError != null) {
+                    setState(() => _fullNameError = null);
+                  }
+                },
               ),
 
               const SizedBox(height: AppSizes.spaceXL),
@@ -136,6 +228,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
+                errorText: _emailError,
+                onChanged: (value) {
+                  if (_emailError != null) {
+                    setState(() => _emailError = null);
+                  }
+                },
               ),
 
               const SizedBox(height: AppSizes.spaceXL),
@@ -151,6 +249,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onToggle: () =>
                       setState(() => _obscurePassword = !_obscurePassword),
                 ),
+                errorText: _passwordError,
+                onChanged: (value) {
+                  if (_passwordError != null) {
+                    setState(() => _passwordError = null);
+                  }
+                },
               ),
 
               const SizedBox(height: AppSizes.spaceXL),
@@ -167,6 +271,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     () => _obscureConfirmPassword = !_obscureConfirmPassword,
                   ),
                 ),
+                errorText: _confirmPasswordError,
+                onChanged: (value) {
+                  if (_confirmPasswordError != null) {
+                    setState(() => _confirmPasswordError = null);
+                  }
+                },
               ),
 
               const SizedBox(height: AppSizes.spaceXL),
