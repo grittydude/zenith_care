@@ -92,12 +92,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         title: 'Awesome',
         description: const Text('You have successfully signed up.'),
         buttonLabel: 'Next',
-        onButtonTap: () {
-          Navigator.of(dialogContext).pop();
-          onButtonTap;
-        },
+        onButtonTap: () => Navigator.of(dialogContext).pop(),
       ),
-    );
+    ).then((_) {
+      if (mounted) onButtonTap();
+    });
   }
 
   void _dismissDialog() {
